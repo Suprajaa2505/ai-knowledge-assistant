@@ -18,6 +18,28 @@ Instead of sending an entire document collection to an LLM, the system retrieves
 - Teams building internal knowledge assistants
 - Anyone who needs question-answering over their own documents
 
+## Application Screenshots
+
+### App Overview
+
+![Application overview](screenshots/app-overview.png)
+
+### Document Upload
+
+![Document upload](screenshots/document-upload.png)
+
+### RAG Answer with Source Citations
+
+![RAG answer with source citations](screenshots/rag-answer-sources.png)
+
+### Conversation Follow-up
+
+![Conversation follow-up](screenshots/conversation-follow-up.png)
+
+### Unsupported Question Handling
+
+![Unsupported question handling](screenshots/unsupported-question.png)
+
 ## Key Features
 
 - PDF and TXT document upload
@@ -310,6 +332,10 @@ Current evaluation results:
 | Average Recall@3 | 1.0000 |
 | Average MRR | 1.0000 |
 
+![Retrieval evaluation runner 1](screenshots/Retrieval%20evaluation%20runner1.png)
+
+![Retrieval evaluation runner 2](screenshots/Retrieval%20evaluation%20runner2.png)
+
 The tested answerable queries consistently retrieved relevant information.
 
 For unsupported queries, the vector search still returns the nearest available chunks because semantic search always produces candidates. The generation layer is responsible for determining whether the retrieved context actually supports an answer and refusing unsupported questions when appropriate.
@@ -336,6 +362,14 @@ Tested scenarios included:
 - Unsupported combinations of unrelated concepts
 
 The generation tests passed for the tested scenarios, including correct refusal behavior for unsupported questions.
+
+![Generation evaluation runner 1](screenshots/Generation%20evaluation%20runner1.png)
+
+![Generation evaluation runner 2](screenshots/Generation%20evaluation%20runner2.png)
+
+![Generation evaluation runner 3](screenshots/Generation%20evaluation%20runner3.png)
+
+![Generation evaluation runner 4](screenshots/Generation%20evaluation%20runner4.png)
 
 ### Evaluation-Driven Development
 
@@ -432,6 +466,18 @@ ai-knowledge-assistant/
 |       +-- components/
 |       +-- App.jsx
 |       +-- App.css
+├── screenshots/
+│   ├── app-overview.png
+│   ├── document-upload.png
+│   ├── rag-answer-sources.png
+│   ├── conversation-follow-up.png
+│   ├── unsupported-question.png
+│   ├── Retrieval evaluation runner1.png
+│   ├── Retrieval evaluation runner2.png
+│   ├── Generation evaluation runner1.png
+│   ├── Generation evaluation runner2.png
+│   ├── Generation evaluation runner3.png
+│   └── Generation evaluation runner4.png
 |
 +-- requirements.txt
 +-- README.md
@@ -641,4 +687,5 @@ The current version includes a working end-to-end RAG application with:
 - End-to-end testing
 - Production frontend build
 
-The project is currently being prepared for deployment.
+The current version is complete for its intended single-user portfolio scope. Deployment is planned as a future enhancement.
+
