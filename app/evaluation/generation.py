@@ -3,10 +3,7 @@ import time
 from app.evaluation.dataset import EVALUATION_DATASET
 from app.retrieval.retriever import retrieve_documents
 from app.retrieval.context_builder import build_context
-from app.generation.generator import generate_answer, GeminiServiceError
-
-
-REFUSAL_TEXT = "I couldn't find the answer in the provided documents."
+from app.generation.generator import generate_answer, GeminiServiceError, REFUSAL_TEXT
 
 
 def evaluate_refusal(answer, answerable):
@@ -176,4 +173,4 @@ if __name__ == "__main__":
         print(result["answer"])
 
         print("\nEvaluation:")
-        print(result["evaluation"])
+        print(result["evaluation"])

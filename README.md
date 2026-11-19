@@ -1,330 +1,120 @@
 # AI Knowledge Assistant
 
-A full-stack Retrieval-Augmented Generation (RAG) document chatbot that allows users to upload documents, ask questions about them, and receive grounded answers with source citations.
+A full-stack Retrieval-Augmented Generation (RAG) app. Upload PDF or TXT documents, ask questions, and get answers based on your documents with source citations (file name and page).
 
-Built with **FastAPI, ChromaDB, Gemini, and React**.
+Built with **FastAPI, ChromaDB, Gemini, React and SQLite**.
 
-## Overview
+**Status:** runs locally. Not deployed. Single-user portfolio project.
 
-The AI Knowledge Assistant is designed for users who need to search and interact with information contained in their own documents.
-
-Instead of sending an entire document collection to an LLM, the system retrieves the most relevant document chunks for each question and provides them as context to the model before generating an answer.
-
-### Who is it useful for?
-
-- Students working with lecture notes, textbooks, and study material
-- Developers querying technical documentation
-- Researchers exploring collections of documents
-- Teams building internal knowledge assistants
-- Anyone who needs question-answering over their own documents
-
-## Application Screenshots
+## Screenshots
 
 ### App Overview
-
 ![Application overview](screenshots/app-overview.png)
 
 ### Document Upload
-
 ![Document upload](screenshots/document-upload.png)
 
-### RAG Answer with Source Citations
-
+### Answer with Source Citations
 ![RAG answer with source citations](screenshots/rag-answer-sources.png)
 
-### Conversation Follow-up
-
+### Follow-up Question
 ![Conversation follow-up](screenshots/conversation-follow-up.png)
 
-### Unsupported Question Handling
-
+### Question the Documents Cannot Answer
 ![Unsupported question handling](screenshots/unsupported-question.png)
 
-## Key Features
+## Features
 
-- PDF and TXT document upload
+- PDF and TXT upload (10 MB limit)
 - Page-aware PDF text extraction
-- Structure-aware document chunking
-- Gemini embeddings
-- Semantic vector search with ChromaDB
-- Retrieval-Augmented Generation with Gemini
-- Source citations with document and page information
-- Conversation history and follow-up questions
-- Document-specific retrieval filtering
-- Grounded responses for supported questions
-- Refusal of unsupported questions
-- FastAPI REST API with interactive Swagger documentation
-- React frontend
-- SQLite-based conversation persistence
-- Retrieval evaluation
-- Generation and grounding evaluation
-- Production-oriented error handling
+- Structure-aware chunking (numbered sections, chapters, markdown headings, then paragraphs, then a recursive splitter as fallback)
+- Gemini embeddings stored in ChromaDB, with semantic search
+- Answers with source citations (document and page)
+- Follow-up questions: the last two messages are used to rewrite a follow-up into a standalone question
+- Optional filter to search a single document
+- Refuses to answer when the documents do not contain the answer
+- Conversations and messages saved in SQLite
+- Gemini rate-limit (429) and unavailable (503) errors are retried with back-off (2s, then 4s), then a friendly error is shown
+- Automated pytest suite and a real-API evaluation
 
 ## How It Works
 
 ```text
-User uploads documents
-        |
-        v
-Document ingestion
-        |
-        v
-PDF / TXT text extraction
-        |
-        v
-Structure-aware chunking
-        |
-        v
-Gemini embeddings
-        |
-        v
-ChromaDB vector store
-        |
-        |
-        |       User question
-        |             |
-        |             v
-        +----> Semantic retrieval
-                      |
-                      v
-              Relevant chunks
-                      |
-                      v
-                Context builder
-                      |
-                      v
-                  Gemini LLM
-                      |
-                      v
-             Answer + citations
+Upload -> Extract text -> Chunk -> Embed -> Store in ChromaDB
+
+Question -> (rewrite if follow-up) -> Embed -> Retrieve top chunks
+         -> Build context -> Gemini -> Answer + citations
 ```
 
-In simple terms:
+The model receives only the retrieved chunks, not the whole document collection.
 
-**Upload → Extract → Chunk → Embed → Retrieve → Generate → Cite**
+## Design Decisions
 
-The LLM is given relevant retrieved context rather than the entire document collection for every question.
+- **FastAPI:** request validation and automatic Swagger docs.
+- **ChromaDB:** local persistent vector store, enough for a single-user app.
+- **Gemini** for both embeddings (`gemini-embedding-001`) and answers (`gemini-3.5-flash-lite`).
+- **Page-aware extraction:** PDFs are read page by page so each chunk keeps its page number for citations.
+- **Conditional conversation context:** a follow-up is only rewritten when the model decides it depends on the previous messages.
+- **Prompt safety:** the prompt tells the model to treat document text as evidence, not instructions. Prompt markers such as `--- END DOCUMENT CONTEXT ---` are stripped from documents and questions so they cannot close the context block early.
+- **No hybrid search or reranking yet:** my evaluations are too small to show whether they would help.
 
-## Architecture
+## Testing
 
-```text
-React Frontend
-       |
-       | HTTP / REST
-       v
-FastAPI Backend
-       |
-       +-----------------------+
-       |                       |
-       v                       v
-Document Ingestion       Conversation Layer
-       |                       |
-       v                       v
-PDF/TXT Loader             SQLite
-       |
-       v
-Structure-aware
-Chunking
-       |
-       v
-Gemini Embeddings
-       |
-       v
-ChromaDB
-       |
-       v
-Retrieval
-       |
-       +----> Contextualized Query
-       |
-       v
-Context Builder
-       |
-       v
-Gemini Generation
-       |
-       v
-Answer + Sources
+### Automated tests (pytest)
+
+Over 80 tests that run offline in a few seconds and need no API key, network or quota.
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest
 ```
 
-## Engineering Decisions
+Gemini is replaced by a small fake. Everything else is real: the FastAPI app, SQLite, ChromaDB, PDF parsing and the chunker. Tests use a temporary folder, so they never touch real documents or conversations.
 
-### FastAPI for the backend
+They cover upload validation and cleanup, the chat flow and response shape, follow-up questions, vector search and filtering, document deletion, rate limits and retries, parsing of the query-rewrite output, prompt-injection protections in the prompt builder, and the evaluation code itself.
 
-FastAPI was chosen to provide a clean REST API layer with request validation, automatic OpenAPI documentation, and support for asynchronous file handling.
+### Evals (real Gemini API)
 
-### ChromaDB for vector storage
+Tests check that my code is correct. The evals check how the model behaves inside the app, so they call the real Gemini API.
 
-ChromaDB provides local persistent vector storage suitable for the current single-user application without introducing unnecessary infrastructure.
-
-### Gemini for embeddings and generation
-
-Gemini is used for both document embeddings and answer generation, keeping the AI layer consistent while allowing the retrieval and generation stages to remain separate.
-
-### Page-aware document processing
-
-PDF text is extracted page-by-page so page information can be preserved as metadata and returned with retrieved sources.
-
-### Structure-aware chunking
-
-The project uses structure-aware chunking rather than relying only on fixed-size splitting. Logical sections are preserved when possible, large sections are split at paragraph boundaries, and recursive character splitting is used as a fallback.
-
-### Conversation context is conditional
-
-The application does not blindly send the entire conversation history to the model for every question.
-
-Recent messages are considered when determining whether a follow-up question depends on previous context. Document retrieval remains the primary source of knowledge.
-
-### Evaluation before advanced RAG
-
-Advanced techniques such as hybrid search and reranking were not added simply because they are common RAG features.
-
-The project follows:
-
-```text
-Evaluate
-   |
-   v
-Identify the actual problem
-   |
-   v
-Determine whether a technique solves it
-   |
-   v
-Implement
-   |
-   v
-Evaluate again
+```bash
+python -m evals.run_evals
 ```
 
-This keeps the architecture focused and avoids adding unnecessary complexity.
+The eval uploads three small documents from `evals/docs/` into a temporary store and asks 20 questions from `evals/cases.json` through the real `/chat` endpoint. It uses about 40 API calls.
 
-## Core RAG Components
+| Category | What it checks |
+|---|---|
+| answerable | Right document retrieved, expected fact in the answer, source cited |
+| hallucination | The topic is in the documents but the fact is not. The model must refuse instead of using its own knowledge |
+| off_topic | Unrelated questions must be refused |
+| injection | A document that says "ignore all instructions", and attempts to extract the system prompt. Checks for planted words in the answer |
+| followup | Two-turn questions that depend on the previous message |
+| structured_output | The query rewriter returns the expected `NO` / `YES + question` format |
 
-### 1. Document Ingestion
+All checks are deterministic (exact text and keywords).
 
-Users can upload PDF and TXT documents through the application.
+**Latest run (my machine):**
 
-PDF files are processed page-by-page so that page information can be preserved and returned with retrieved sources.
+| Category | Passed |
+|---|---:|
+| answerable | 5/5 |
+| hallucination | 4/4 |
+| off_topic | 2/2 |
+| injection | 5/5 |
+| followup | 2/2 |
+| structured_output | 2/2 |
+| **Total** | **20/20** |
 
-### 2. Structure-Aware Chunking
+- Latency per chat request: median 2.72s, max 5.42s
+- Tokens: average 508 input / 34 output per Gemini call (24 calls)
+- Rate-limit (429) errors: 0
 
-The system does not rely only on fixed-size character splitting.
+These results show the app behaved correctly on these 20 cases. The set is small and uses short, clean documents, so it does not prove the model never hallucinates.
 
-It first detects logical structures such as:
+### Earlier evaluation (`app/evaluation/`)
 
-- Numbered sections
-- Subsections
-- Chapters
-- Section headings
-- Markdown headings
-
-Large sections are then split at paragraph boundaries before falling back to recursive character splitting when necessary.
-
-This helps preserve related information within the same retrieval unit.
-
-### 3. Embeddings and Vector Search
-
-Document chunks are converted into vector embeddings using Gemini and stored in ChromaDB.
-
-When a user asks a question:
-
-```text
-Question
-   |
-   v
-Query embedding
-   |
-   v
-Vector similarity search
-   |
-   v
-Top relevant document chunks
-```
-
-### 4. Contextualized Retrieval
-
-For follow-up questions, the system can use recent conversation context to determine whether the question depends on the previous exchange.
-
-The resulting contextualized query is then used for document retrieval.
-
-This avoids blindly sending the entire conversation history to the LLM for every request.
-
-### 5. Grounded Generation
-
-Retrieved document chunks are passed to Gemini as evidence for the answer.
-
-The generation layer is instructed to use the retrieved context and avoid treating document content as instructions.
-
-This creates a boundary between retrieved knowledge and model instructions and helps reduce unsupported answers.
-
-### 6. Source Citations
-
-Retrieved chunks retain metadata including:
-
-- Document ID
-- Source filename
-- Page number
-- Chunk index
-
-This metadata is returned with generated answers so users can identify where the information came from.
-
-Example:
-
-```text
-transformers_guide.pdf — Page 2
-```
-
-### 7. Conversation Context
-
-The application supports follow-up questions within conversations.
-
-For example:
-
-```text
-User: What are Transformers?
-
-Assistant: ...
-
-User: Why did they replace RNNs?
-```
-
-The second question can use relevant recent conversation context while still retrieving supporting information from the document collection.
-
-### 8. Document Filtering
-
-Users can select a specific document when asking questions.
-
-The retrieval layer can then restrict the search to that document rather than searching the entire collection.
-
-### 9. Unsupported Questions
-
-The system was tested with questions that were outside the available document knowledge.
-
-For unsupported questions, the assistant is designed to avoid presenting unrelated retrieved information as a confident answer.
-
-This behavior was specifically included in the generation evaluation.
-
-## Evaluation
-
-Evaluation was treated as an important part of the RAG system rather than an optional final step.
-
-The project evaluates both:
-
-1. **Retrieval quality**
-2. **Generated answer quality and grounding**
-
-### Retrieval Evaluation
-
-A test dataset was created containing answerable and unanswerable queries.
-
-Retrieval was evaluated using:
-
-- Precision@3
-- Recall@3
-- Mean Reciprocal Rank (MRR)
-
-Current evaluation results:
+My first evaluation scripts, run on my own local documents with 4 answerable and 2 unanswerable queries:
 
 | Metric | Result |
 |---|---:|
@@ -332,210 +122,70 @@ Current evaluation results:
 | Average Recall@3 | 1.0000 |
 | Average MRR | 1.0000 |
 
+Precision@3 is limited by design when only 1 or 2 chunks are relevant (the best possible score with one relevant chunk is 0.33), so 0.58 is not a weakness. This evaluation depends on document IDs from my local database, so others cannot reproduce it. The `evals/` folder above replaces it for that reason.
+
 ![Retrieval evaluation runner 1](screenshots/Retrieval%20evaluation%20runner1.png)
-
 ![Retrieval evaluation runner 2](screenshots/Retrieval%20evaluation%20runner2.png)
-
-The tested answerable queries consistently retrieved relevant information.
-
-For unsupported queries, the vector search still returns the nearest available chunks because semantic search always produces candidates. The generation layer is responsible for determining whether the retrieved context actually supports an answer and refusing unsupported questions when appropriate.
-
-### Generation and Grounding Evaluation
-
-Generation was tested using both supported and unsupported questions.
-
-The evaluation checked whether:
-
-- Answers were supported by retrieved document context
-- Relevant source citations were returned
-- Follow-up questions used appropriate context
-- The system refused unsupported questions
-- The model avoided confidently answering questions outside the available documents
-
-Tested scenarios included:
-
-- RAG-related questions
-- Transformer-related questions
-- Transformer vs RNN questions
-- Questions about hallucination reduction
-- Unsupported quantum computing questions
-- Unsupported combinations of unrelated concepts
-
-The generation tests passed for the tested scenarios, including correct refusal behavior for unsupported questions.
-
 ![Generation evaluation runner 1](screenshots/Generation%20evaluation%20runner1.png)
-
 ![Generation evaluation runner 2](screenshots/Generation%20evaluation%20runner2.png)
-
 ![Generation evaluation runner 3](screenshots/Generation%20evaluation%20runner3.png)
-
 ![Generation evaluation runner 4](screenshots/Generation%20evaluation%20runner4.png)
 
-### Evaluation-Driven Development
+### Manual testing
 
-Advanced RAG techniques were not added simply because they are common features.
-
-The project follows:
-
-```text
-Evaluate
-   |
-   v
-Identify the actual problem
-   |
-   v
-Determine whether a technique solves it
-   |
-   v
-Implement
-   |
-   v
-Evaluate again
-```
-
-For the current evaluation dataset, the existing retrieval pipeline was sufficient. Therefore, techniques such as hybrid search and reranking were not added unnecessarily.
+I also tested by hand: upload validation (type, size, empty file), Gemini error handling, document filtering, persistence across a backend restart, and in the frontend: upload, chat and follow-ups, source display, deleting documents and conversations, browser refresh, and a production build.
 
 ## Tech Stack
 
-### Backend
-
-- Python
-- FastAPI
-- Uvicorn
-- Gemini API
-- ChromaDB
-- PyMuPDF
-- LangChain Text Splitters
-- SQLite
-
-### Frontend
-
-- React
-- Vite
-- React Markdown
-- JavaScript
-- CSS
-
-### AI / RAG
-
-- Gemini LLM
-- Gemini Embeddings
-- Vector similarity search
-- Retrieval-Augmented Generation
-- Structure-aware chunking
+- **Backend:** Python, FastAPI, Uvicorn, ChromaDB, PyMuPDF, LangChain Text Splitters, SQLite
+- **AI:** Gemini API (embeddings and generation)
+- **Frontend:** React, Vite, React Markdown, CSS
+- **Testing:** pytest, httpx
 
 ## Project Structure
 
 ```text
 ai-knowledge-assistant/
-|
-+-- app/
-|   |
-|   +-- ingestion/
-|   |   +-- loader.py
-|   |   +-- chunker.py
-|   |   +-- indexer.py
-|   |
-|   +-- embeddings/
-|   |   +-- embedder.py
-|   |
-|   +-- vectorstore/
-|   |   +-- chroma.py
-|   |
-|   +-- retrieval/
-|   |   +-- retriever.py
-|   |   +-- contextualizer.py
-|   |   +-- context_builder.py
-|   |
-|   +-- generation/
-|   |   +-- generator.py
-|   |
-|   +-- evaluation/
-|   |   +-- retrieval.py
-|   |   +-- generation.py
-|   |   +-- runner.py
-|   |   +-- dataset.py
-|   |
-|   +-- database.py
-|   +-- gemini_service.py
-|   +-- config.py
-|   +-- main.py
-|
-+-- frontend/
-|   +-- src/
-|       +-- components/
-|       +-- App.jsx
-|       +-- App.css
+├── app/
+│   ├── ingestion/        loader.py, chunker.py, indexer.py
+│   ├── embeddings/       embedder.py
+│   ├── vectorstore/      chroma.py
+│   ├── retrieval/        retriever.py, contextualizer.py, context_builder.py
+│   ├── generation/       generator.py
+│   ├── evaluation/       earlier evaluation scripts
+│   ├── database.py
+│   ├── gemini_service.py   error mapping and retries
+│   ├── config.py
+│   └── main.py
+├── frontend/             React + Vite
+├── tests/                pytest tests (offline)
+├── evals/                real-API evaluation (cases, checks, runner, documents)
 ├── screenshots/
-│   ├── app-overview.png
-│   ├── document-upload.png
-│   ├── rag-answer-sources.png
-│   ├── conversation-follow-up.png
-│   ├── unsupported-question.png
-│   ├── Retrieval evaluation runner1.png
-│   ├── Retrieval evaluation runner2.png
-│   ├── Generation evaluation runner1.png
-│   ├── Generation evaluation runner2.png
-│   ├── Generation evaluation runner3.png
-│   └── Generation evaluation runner4.png
-|
-+-- requirements.txt
-+-- README.md
-+-- .gitignore
+├── requirements.txt
+├── requirements-dev.txt
+├── pytest.ini
+└── README.md
 ```
 
 ## API
 
-The backend exposes REST endpoints for:
+Endpoints for health check, document upload, listing, details and deletion, conversation creation, listing and deletion, message retrieval, chat, and retrieval inspection (`/evaluate/retrieval`).
 
-- Health checks
-- Document upload
-- Document listing and details
-- Document deletion
-- Conversation creation
-- Conversation listing
-- Message retrieval
-- RAG chat
-- Retrieval evaluation
-
-FastAPI automatically provides interactive API documentation through Swagger UI.
-
-When running locally, the Swagger UI is available at:
-
-```text
-http://127.0.0.1:8000/docs
-```
+Swagger UI when running locally: `http://127.0.0.1:8000/docs`
 
 ## Running Locally
 
-### Backend
-
-Clone the repository:
-
-```bash
-git clone https://github.com/Suprajaa2505/ai-knowledge-assistant.git
-cd ai-knowledge-assistant
-```
-
-Create and activate a Python environment:
-
-```bash
-python -m venv venv
-```
-
-Activate it on Windows:
+Run all backend commands from the project root (the folder that contains `app/`).
 
 ```powershell
+git clone https://github.com/Suprajaa2505/ai-knowledge-assistant.git
+cd ai-knowledge-assistant
+python -m venv venv
 venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Create a `.env` file:
+Create a `.env` file in the project root:
 
 ```env
 GEMINI_API_KEY=your_api_key_here
@@ -543,149 +193,45 @@ GEMINI_API_KEY=your_api_key_here
 
 Start the backend:
 
-```bash
+```powershell
 uvicorn app.main:app --reload
 ```
 
-The API will be available at:
+In a second terminal, start the frontend:
 
-```text
-http://127.0.0.1:8000
-```
-
-Interactive API documentation:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### Frontend
-
-Open another terminal:
-
-```bash
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-Open the local Vite URL displayed in the terminal.
-
-## Testing
-
-The application was tested across the backend, retrieval, generation, persistence, and frontend layers.
-
-### Backend
-
-- API validation
-- File type validation
-- File size validation
-- Empty file handling
-- Unsupported document handling
-- Gemini error handling
-- Unexpected server error handling
-- Conversation validation
-- Document filtering
-- Persistence across backend restart
-
-### RAG
-
-- Document retrieval
-- Retrieval ranking
-- RAG answer generation
-- Source citation correctness
-- Conversation-aware follow-up questions
-- Unsupported-question handling
-- Retrieval evaluation
-- Generation and grounding evaluation
-
-### Frontend
-
-- Application startup
-- Document upload
-- Document selection
-- Conversation creation
-- Chat and follow-up questions
-- Source display
-- Document filtering
-- Document deletion
-- Conversation deletion
-- Browser refresh persistence
-- Backend restart persistence
-- Frontend production build
+Open the local URL that Vite prints.
 
 ## Security and Data Handling
 
-Sensitive credentials and runtime data are excluded from version control.
+`.env`, `venv/`, `documents/`, `chroma_db/`, `app.db`, `frontend/node_modules/` and `frontend/dist/` are excluded from git. The API key is read from an environment variable.
 
-The following are intentionally ignored:
-
-```text
-.env
-venv/
-documents/
-chroma_db/
-app.db
-frontend/node_modules/
-frontend/dist/
-```
-
-The Gemini API key is loaded through environment variables and is not stored in source code.
-
-The current application is intentionally designed as a single-user system. Authentication, authorization, user ownership, and multi-user isolation are planned as future enhancements.
+The app has no authentication. Do not expose it publicly as it is, because anyone who can reach it could upload files and use your Gemini quota.
 
 ## Current Limitations
 
-The current implementation focuses on a reliable core RAG workflow.
+- Single user, no authentication
+- Local SQLite and ChromaDB storage
+- No OCR for scanned PDFs
+- No hybrid search or reranking
+- The evaluations are small
+- The frontend has no automated tests, and its API address (`http://127.0.0.1:8000`) is hard-coded
+- Not deployed
 
-Current limitations include:
+## Possible Next Steps
 
-- Single-user architecture
-- Local SQLite persistence
-- Local ChromaDB persistence
-- Text-based PDF extraction rather than OCR for scanned documents
-- No hybrid keyword + vector search
-- No reranking layer
-- No authentication
-
-These limitations are intentional scope decisions for the current version and provide clear areas for future development.
-
-## Future Improvements
-
-Potential future improvements include:
-
-- Hybrid search
-- Reranking
-- More advanced semantic chunking
+- Larger evaluation set, including real documents
+- Hybrid search or reranking, if evaluation shows a need
 - OCR for scanned documents
-- Improved metadata filtering
-- Duplicate-document detection
-- PostgreSQL for larger-scale persistence
-- Authentication and multi-user isolation
-- More advanced conversation-aware retrieval
-- Production monitoring and deployment
+- Authentication
+- Configurable API URL in the frontend, then deployment
+- Run the tests automatically on every push (GitHub Actions)
 
-Advanced features will be introduced based on evaluation results rather than adding complexity without a demonstrated need.
+## Notes
 
-## Project Status
-
-The current version includes a working end-to-end RAG application with:
-
-- Document ingestion
-- Structure-aware chunking
-- Embeddings
-- Vector retrieval
-- Contextual retrieval
-- Gemini generation
-- Source citations
-- Conversation context
-- Document filtering
-- Error handling
-- Retrieval evaluation
-- Generation and grounding evaluation
-- React frontend
-- End-to-end testing
-- Production frontend build
-
-The current version is complete for its intended single-user portfolio scope. Deployment is planned as a future enhancement.
-
+The tests and the evaluation were written with help from Claude (an AI assistant), then reviewed, run and extended by me.

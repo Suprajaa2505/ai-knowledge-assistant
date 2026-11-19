@@ -1,0 +1,16 @@
+Transformers Guide
+
+1. What are Transformers
+Transformers are a neural network architecture introduced in the 2017 paper "Attention Is All You Need" by Vaswani and colleagues. They were first designed for translation and have since become the foundation of modern language models. They are also used for images, audio and code.
+
+2. Why Transformers replaced RNNs
+Recurrent neural networks (RNNs) read a sequence one token at a time, which makes training slow and hard to parallelise. Transformers process all tokens of a sequence at the same time, which suits GPUs. They also handle long-range relationships better, because any token can attend directly to any other token regardless of distance.
+
+3. Self-attention and multi-head attention
+Self-attention lets each token weigh how relevant every other token is when building its representation. Multi-head attention runs several attention operations in parallel, so the model can look at different kinds of relationships at once.
+
+4. Positional encoding
+Because Transformers have no built-in notion of order, positional encodings are added to the token embeddings so the model knows where each token sits in the sequence.
+
+5. Encoder and decoder
+The original Transformer had an encoder that reads the input and a decoder that produces the output. Many later models use only the decoder (for text generation) or only the encoder (for understanding tasks).

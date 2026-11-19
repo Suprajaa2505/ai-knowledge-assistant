@@ -1,0 +1,13 @@
+Retrieval-Augmented Generation (RAG) Guide
+
+1. What is RAG
+Retrieval-Augmented Generation, or RAG, is a technique where a language model is given relevant information retrieved from a document collection at the moment a question is asked. Instead of relying only on what the model memorised during training, the system first searches the documents and then asks the model to answer using what it found.
+
+2. How RAG works
+A RAG system has two stages. In the indexing stage, documents are split into small chunks, each chunk is converted into an embedding (a list of numbers that captures its meaning), and the embeddings are stored in a vector database. In the query stage, the user's question is embedded, the most similar chunks are retrieved, and they are placed in the prompt so the model can answer from them.
+
+3. Benefits of RAG
+RAG reduces hallucinations because answers are grounded in retrieved text. It lets you update knowledge by adding or removing documents, without retraining the model. It also makes it possible to show sources, so users can verify each answer.
+
+4. Limitations of RAG
+If retrieval returns the wrong chunks, the model cannot give a good answer. Chunks that are too small lose context, and chunks that are too large add noise. RAG also adds latency, because every question needs an extra search step.

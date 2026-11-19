@@ -1,44 +1,33 @@
 from google import genai
 
 from app.config import GEMINI_API_KEY
-from app.gemini_service import GeminiServiceError,logger
+from app.gemini_service import GeminiServiceError, call_with_retry
 
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# Send at most this many texts per request (keeps each request small and safe).
+BATCH_SIZE = 100
+
 
 def create_embeddings(texts):
-    try:
-        response = client.models.embed_content(
+    vectors = []
+
+    for start in range(0, len(texts), BATCH_SIZE):
+        batch = texts[start:start + BATCH_SIZE]
+
+        response = call_with_retry(
+            client.models.embed_content,
             model="gemini-embedding-001",
-            contents=texts
+            contents=batch
         )
 
-    except Exception as error:
-        logger.exception("Gemini answer generation failed")
-        status_code = getattr(error, "status_code", None)
-
-        if status_code == 429:
+        if not response.embeddings:
             raise GeminiServiceError(
-                "The AI service rate limit has been reached. Please try again later.",
-                status_code=429
-            )
-
-        if status_code == 503:
-            raise GeminiServiceError(
-                "The AI service is temporarily unavailable. Please try again later.",
+                "The AI service returned no embeddings.",
                 status_code=503
             )
 
-        raise GeminiServiceError(
-            "The AI service could not process the request. Please try again later.",
-            status_code=503
-        )
+        vectors.extend(embedding.values for embedding in response.embeddings)
 
-    if not response.embeddings:
-        raise GeminiServiceError(
-            "The AI service returned no embeddings.",
-            status_code=503
-        )
-
-    return [embedding.values for embedding in response.embeddings]
+    return vectors

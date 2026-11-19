@@ -24,7 +24,7 @@ from app.database import (
 )
 
 from app.gemini_service import GeminiServiceError
-from app.generation.generator import generate_answer
+from app.generation.generator import generate_answer, REFUSAL_TEXT
 from app.ingestion.indexer import index_document
 from app.retrieval.contextualizer import contextualize_query
 from app.retrieval.retriever import retrieve_documents
@@ -76,7 +76,7 @@ async def unexpected_exception_handler(
     )
 
 @app.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+def upload_document(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(
             status_code=400,
@@ -97,7 +97,7 @@ async def upload_document(file: UploadFile = File(...)):
     file_path = UPLOAD_DIR / stored_filename
 
     try:
-        contents = await file.read()
+        contents = file.file.read()
 
         if len(contents) > MAX_FILE_SIZE:
             raise HTTPException(
@@ -322,7 +322,11 @@ def chat(
 
     sources = []
 
-    for metadata in metadatas:
+    # A refusal means none of the retrieved chunks supported an answer,
+    # so showing them as "sources" would be misleading.
+    answered = REFUSAL_TEXT not in answer
+
+    for metadata in (metadatas if answered else []):
         page = metadata.get("page")
 
         citation = metadata["source"]

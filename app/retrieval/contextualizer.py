@@ -1,7 +1,7 @@
 from google import genai
 
 from app.config import GEMINI_API_KEY
-from app.gemini_service import GeminiServiceError, logger
+from app.gemini_service import GeminiServiceError, call_with_retry
 
 
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -46,32 +46,11 @@ Do not answer the question.
 Do not add explanations.
 """
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=prompt
-        )
-
-    except Exception as error:
-        logger.exception("Gemini contextualization failed")
-        status_code = getattr(error, "status_code", None)
-
-        if status_code == 429:
-            raise GeminiServiceError(
-                "The AI service rate limit has been reached. Please try again later.",
-                status_code=429
-            )
-
-        if status_code == 503:
-            raise GeminiServiceError(
-                "The AI service is temporarily unavailable. Please try again later.",
-                status_code=503
-            )
-
-        raise GeminiServiceError(
-            "The AI service could not process the request. Please try again later.",
-            status_code=503
-        )
+    response = call_with_retry(
+        client.models.generate_content,
+        model="gemini-3.5-flash-lite",
+        contents=prompt
+    )
 
     if not response.text:
         raise GeminiServiceError(
@@ -81,11 +60,12 @@ Do not add explanations.
 
     result = response.text.strip()
 
-    if result == "NO":
-        return query, False
+    # LLMs do not follow output formats perfectly ("yes", "YES:", "No.").
+    # Be tolerant; if unsure, fall back to the user's own question.
+    first_word = result.upper().split(None, 1)[0].strip(":.,") if result else ""
 
-    if result.startswith("YES"):
-        rewritten_query = result[3:].strip()
+    if first_word == "YES":
+        rewritten_query = result[3:].lstrip(" :\n\t").strip()
 
         if rewritten_query:
             return rewritten_query, True

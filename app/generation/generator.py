@@ -1,16 +1,33 @@
+import re
+
 from google import genai
 
 from app.config import GEMINI_API_KEY
-from app.gemini_service import GeminiServiceError, logger
+from app.gemini_service import GeminiServiceError, call_with_retry
 
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# The exact sentence the model must use when the documents do not contain the answer.
+# (main.py and the evaluation code import this, so it is defined only once.)
+REFUSAL_TEXT = "I couldn't find the answer in the provided documents."
 
+
+def _neutralize_delimiters(text):
+    """Stop untrusted text (documents, questions) from faking our prompt markers.
+
+    Without this, a document containing "--- END DOCUMENT CONTEXT ---" could
+    close the context block early and make its own text look like instructions.
+    """
+    return re.sub(r"-{3,}\s*(?:BEGIN|END)[^\n]*", "[delimiter removed]", str(text))
 
 
 def generate_answer(query, context, conversation_context=None):
+    query = _neutralize_delimiters(query)
+    context = _neutralize_delimiters(context)
+
     if conversation_context:
+        conversation_context = _neutralize_delimiters(conversation_context)
         conversation_section = f"""
 Relevant conversation context:
 --- BEGIN CONVERSATION CONTEXT ---
@@ -40,7 +57,7 @@ IMPORTANT RULES:
 5. Do not invent facts that are not supported by the retrieved
    document context.
 6. If the answer cannot be found in the retrieved documents, say:
-   "I couldn't find the answer in the provided documents."
+   "{REFUSAL_TEXT}"
 7. Use conversation context only to understand the user's current
    question or references to previous turns.
 8. When the answer is supported by a source, mention the relevant
@@ -60,32 +77,11 @@ Current user question:
 --- END QUESTION ---
 """
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=prompt
-        )
-
-    except Exception as error:
-        logger.exception("Gemini answer generation failed")
-        status_code = getattr(error, "status_code", None)
-
-        if status_code == 429:
-            raise GeminiServiceError(
-                "The AI service rate limit has been reached. Please try again later.",
-                status_code=429
-            )
-
-        if status_code == 503:
-            raise GeminiServiceError(
-                "The AI service is temporarily unavailable. Please try again later.",
-                status_code=503
-            )
-
-        raise GeminiServiceError(
-            "The AI service could not process the request. Please try again later.",
-            status_code=503
-        )
+    response = call_with_retry(
+        client.models.generate_content,
+        model="gemini-3.5-flash-lite",
+        contents=prompt
+    )
 
     if not response.text:
         raise GeminiServiceError(
@@ -93,4 +89,4 @@ Current user question:
             status_code=503
         )
 
-    return response.text
+    return response.text

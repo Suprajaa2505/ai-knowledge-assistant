@@ -97,6 +97,9 @@ def split_pages(pages):
     for page in pages:
         text = page["text"].strip()
 
+        if not text:
+            continue   # blank or image-only page: nothing to embed
+
         sections = split_into_sections(text)
 
         for section in sections:
@@ -115,4 +118,4 @@ def split_pages(pages):
                         "page": page["page"]
                     })
 
-    return chunks
+    return chunks
