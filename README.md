@@ -5,6 +5,7 @@ A full-stack Retrieval-Augmented Generation (RAG) app. Upload PDF or TXT documen
 Built with **FastAPI, ChromaDB, Gemini, React and SQLite**.
 
 **Status:** runs locally. Not deployed. Single-user portfolio project.
+**Demo video:** [Watch the demo](https://youtu.be/j_ey1PahBmk)
 
 ## Screenshots
 
