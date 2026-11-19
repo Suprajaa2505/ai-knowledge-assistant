@@ -22,8 +22,8 @@
         }
       ],
       "passed": true,
-      "answer": "Retrieval-Augmented Generation (RAG) is a technique where a language model is provided with relevant information retrieved from a document collection when a question is asked. Instead of relying solely on what the model memorized during training, the system first searches the documents and then asks the model to answer using the found information (rag_guide.txt).",
-      "seconds": 2.232584700017469,
+      "answer": "Retrieval-Augmented Generation (RAG) is a technique where a language model is provided with relevant information retrieved from a document collection at the time a question is asked. Instead of relying solely on information the model memorized during training, the system first searches the documents and then asks the model to generate an answer using the retrieved content (rag_guide.txt).",
+      "seconds": 10.170770400000038,
       "top_distance": 0.6606670022010803,
       "error": null
     },
@@ -49,8 +49,8 @@
         }
       ],
       "passed": true,
-      "answer": "Based on the provided documents, Transformers replaced RNNs for the following reasons:\n\n1. **Parallelisation and Training Speed:** RNNs read sequences one token at a time, making training slow and difficult to parallelise. In contrast, Transformers process all tokens in a sequence simultaneously, which is well-suited for GPUs (*transformers_guide.txt*).\n2. **Long-range Relationships:** Transformers handle long-range relationships better because any token can attend directly to any other token, regardless of the distance between them (*transformers_guide.txt*).",
-      "seconds": 2.0398051000083797,
+      "answer": "Based on the provided document, Transformers replaced RNNs for the following reasons:\n\n1. **Parallelisation and Training Speed:** RNNs process sequences one token at a time, making training slow and difficult to parallelise. In contrast, Transformers process all tokens of a sequence simultaneously, which is well-suited for GPUs (*transformers_guide.txt*).\n2. **Handling Long-Range Relationships:** Transformers handle long-range relationships better because any token can attend directly to any other token, regardless of the distance between them (*transformers_guide.txt*).",
+      "seconds": 11.605545200000051,
       "top_distance": 0.2414729744195938,
       "error": null
     },
@@ -76,8 +76,8 @@
         }
       ],
       "passed": true,
-      "answer": "Positional encoding solves the problem of Transformers having no built-in notion of order. By adding positional encodings to the token embeddings, the model is able to know where each token sits in the sequence (Document: transformers_guide.txt).",
-      "seconds": 1.9502527000149712,
+      "answer": "Positional encoding solves the problem that Transformers have no built-in notion of order. By adding positional encodings to the token embeddings, the model is able to know where each token sits in the sequence (transformers_guide.txt).",
+      "seconds": 5.424674699985189,
       "top_distance": 0.5020409822463989,
       "error": null
     },
@@ -103,8 +103,8 @@
         }
       ],
       "passed": true,
-      "answer": "Based on the provided documents, the limitations of RAG are:\n\n* If the retrieval step returns the wrong chunks, the model cannot provide a good answer.\n* Chunks that are too small lose context, while chunks that are too large introduce noise.\n* It adds latency to the process because every question requires an extra search step.\n\n*(Source: rag_guide.txt)*",
-      "seconds": 2.721841899998253,
+      "answer": "Based on the provided documents, the limitations of RAG are:\n\n* If retrieval returns the wrong chunks, the model cannot give a good answer (rag_guide.txt).\n* Chunks that are too small lose context, while chunks that are too large add noise (rag_guide.txt).\n* It adds latency because every question requires an extra search step (rag_guide.txt).",
+      "seconds": 8.900333800003864,
       "top_distance": 0.4302191734313965,
       "error": null
     },
@@ -130,8 +130,8 @@
         }
       ],
       "passed": true,
-      "answer": "Transformers were introduced in the 2017 paper \"Attention Is All You Need\" (transformers_guide.txt).",
-      "seconds": 3.890694000001531,
+      "answer": "Transformers were introduced in the 2017 paper titled \"Attention Is All You Need\" by Vaswani and colleagues (transformers_guide.txt).",
+      "seconds": 7.509999000001699,
       "top_distance": 0.4227880537509918,
       "error": null
     },
@@ -148,7 +148,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 4.283366200019373,
+      "seconds": 7.6643025999946985,
       "top_distance": 0.8376060724258423,
       "error": null
     },
@@ -165,7 +165,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 5.421059099986451,
+      "seconds": 6.357469000009587,
       "top_distance": 0.45249420404434204,
       "error": null
     },
@@ -182,7 +182,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 3.799483600014355,
+      "seconds": 9.308243000006769,
       "top_distance": 0.4716395437717438,
       "error": null
     },
@@ -199,7 +199,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 3.488668499980122,
+      "seconds": 10.774995799991302,
       "top_distance": 0.45067498087882996,
       "error": null
     },
@@ -216,7 +216,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 2.6560041999910027,
+      "seconds": 8.731266700022388,
       "top_distance": 0.8990044593811035,
       "error": null
     },
@@ -233,7 +233,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 2.343045000015991,
+      "seconds": 10.235742099990603,
       "top_distance": 1.011702537536621,
       "error": null
     },
@@ -264,8 +264,8 @@
         }
       ],
       "passed": true,
-      "answer": "The office is open Monday to Friday from 9:00 AM to 5:30 PM, and is closed on weekends (office_faq.txt).",
-      "seconds": 1.8296942999877501,
+      "answer": "Based on the provided documents, the office is open Monday to Friday from 9:00 AM to 5:30 PM, and is closed on weekends (office_faq.txt).",
+      "seconds": 8.787257199990563,
       "top_distance": 0.6202102899551392,
       "error": null
     },
@@ -297,7 +297,7 @@
       ],
       "passed": true,
       "answer": "Full-time employees receive 24 days of paid leave per year (office_faq.txt).",
-      "seconds": 3.127856500010239,
+      "seconds": 6.999038899986772,
       "top_distance": 0.6442848443984985,
       "error": null
     },
@@ -324,7 +324,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 2.756279599998379,
+      "seconds": 7.733919899998,
       "top_distance": 0.6549763679504395,
       "error": null
     },
@@ -341,7 +341,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 1.7171683000051416,
+      "seconds": 6.388835299992934,
       "top_distance": 0.8295005559921265,
       "error": null
     },
@@ -358,7 +358,7 @@
       ],
       "passed": true,
       "answer": "I couldn't find the answer in the provided documents.",
-      "seconds": 1.569409000017913,
+      "seconds": 4.347426199994516,
       "top_distance": 0.6090072989463806,
       "error": null
     },
@@ -374,8 +374,8 @@
         }
       ],
       "passed": true,
-      "answer": "Transformers replaced Recurrent Neural Networks (RNNs) for several reasons:\n\n1. **Parallelization:** RNNs process sequences one token at a time, making training slow and difficult to parallelize. In contrast, Transformers process all tokens of a sequence simultaneously, which is well-suited for GPUs (transformers_guide.txt).\n2. **Long-range relationships:** Transformers handle long-range relationships much better than RNNs because any token can attend directly to any other token, regardless of the distance between them (transformers_guide.txt).",
-      "seconds": 2.718752000015229,
+      "answer": "Transformers replaced Recurrent Neural Networks (RNNs) for several reasons:\n\n* **Parallelization:** RNNs process sequences one token at a time, making training slow and difficult to parallelize. In contrast, Transformers process all tokens in a sequence simultaneously, which is well-suited for GPUs (transformers_guide.txt).\n* **Long-range relationships:** Transformers handle long-range relationships better because any token can attend directly to any other token, regardless of the distance between them (transformers_guide.txt).",
+      "seconds": 3.0678912999865133,
       "top_distance": null,
       "error": null
     },
@@ -391,8 +391,8 @@
         }
       ],
       "passed": true,
-      "answer": "RAG reduces hallucinations because the answers generated by the model are grounded in the retrieved text (rag_guide.txt).",
-      "seconds": 2.857651700003771,
+      "answer": "RAG reduces hallucinations because the answers are grounded in the retrieved text (rag_guide.txt).",
+      "seconds": 4.610705999977654,
       "top_distance": null,
       "error": null
     },
@@ -414,7 +414,7 @@
       ],
       "passed": true,
       "answer": "Why did Transformer neural network architectures replace RNNs?",
-      "seconds": 1.360252499987837,
+      "seconds": 6.208078299998306,
       "top_distance": null,
       "error": null
     },
@@ -431,7 +431,7 @@
       ],
       "passed": true,
       "answer": "What is RAG?",
-      "seconds": 1.2222526999830734,
+      "seconds": 3.0656869999947958,
       "top_distance": null,
       "error": null
     }
@@ -466,14 +466,14 @@
     "passed": 20,
     "total": 20,
     "latency_seconds": {
-      "median": 2.72,
-      "max": 5.42
+      "median": 7.7,
+      "max": 11.61
     },
     "tokens": {
       "generate_calls": 24,
-      "input_total": 12204,
-      "output_total": 804,
-      "input_avg_per_call": 508,
+      "input_total": 12249,
+      "output_total": 813,
+      "input_avg_per_call": 510,
       "output_avg_per_call": 34
     },
     "rate_limit_hits_429": 0,

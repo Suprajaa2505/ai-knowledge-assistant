@@ -8,6 +8,6 @@
 | structured_output | 2/2 |
 | **Total** | **20/20** |
 
-- Latency per chat request: median 2.72s, max 5.42s
-- Tokens: 12204 in / 804 out over 24 generate calls (avg 508 in / 34 out)
+- Latency per chat request: median 7.7s, max 11.61s
+- Tokens: 12249 in / 813 out over 24 generate calls (avg 510 in / 34 out)
 - Rate-limit (429) errors seen: 0

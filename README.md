@@ -106,8 +106,8 @@ All checks are deterministic (exact text and keywords).
 | structured_output | 2/2 |
 | **Total** | **20/20** |
 
-- Latency per chat request: median 2.72s, max 5.42s
-- Tokens: average 508 input / 34 output per Gemini call (24 calls)
+- Latency per chat request: median 2.7s (max 5.4s) in one run and 7.7s (max 11.6s) in another. It varies with network speed and Gemini load.
+- Tokens: about 510 input / 34 output per Gemini call (24 calls per run)
 - Rate-limit (429) errors: 0
 
 These results show the app behaved correctly on these 20 cases. The set is small and uses short, clean documents, so it does not prove the model never hallucinates.
